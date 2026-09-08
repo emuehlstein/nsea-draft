@@ -413,7 +413,7 @@
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
-  const map = L.map('rptr-map', { scrollWheelZoom: false }).setView([42.10, -87.78], 10);
+  const map = L.map('rptr-map', { scrollWheelZoom: false }).setView([42.03, -87.95], 9);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
     maxZoom: 16
@@ -423,25 +423,29 @@
   }).addTo(map);
 
   const amber = '#f5a623';
-  const mkRepeater = (lat, lng, label, radiusM) => {
-    L.circle([lat, lng], {
-      radius: radiusM, color: amber, weight: 1.5,
-      fillColor: amber, fillOpacity: 0.08
-    }).addTo(map);
+  const MI = 1609.34;
+  const circles = [];
+  const mkRepeater = (lat, lng, label, radiusMi) => {
+    circles.push(L.circle([lat, lng], {
+      radius: radiusMi * MI, color: amber, weight: 1.5,
+      fillColor: amber, fillOpacity: 0.07
+    }).addTo(map));
     L.circleMarker([lat, lng], {
       radius: 7, color: amber, weight: 2, fillColor: amber, fillOpacity: 0.9
     }).addTo(map).bindPopup(label);
   };
 
-  // NSEA primary system (approximate service area)
-  mkRepeater(42.13, -87.82, '<b>NSEA System</b><br>462.675 / 462.650 / 462.700 MHz<br>TX +5 MHz \u00b7 .675 PL 141.3<br><em>Approximate service area</em>', 20000);
-  // Cooperating Evanston system (approximate)
-  mkRepeater(42.045, -87.688, '<b>Evanston .725 (Cooperating)</b><br>RX 462.725 / TX 467.725 MHz<br><em>Approximate service area</em>', 10000);
+  mkRepeater(42.0384, -87.8485, '<b>Heritage .675 \u00b7 Primary</b><br>RX 462.675 / TX 467.675 MHz \u00b7 PL 141.3<br>~35 mi range', 35);
+  mkRepeater(41.9858, -88.2530, '<b>.650 System</b><br>RX 462.650 / TX 467.650 MHz<br>~35 mi range', 35);
+  mkRepeater(42.0669, -87.6908, '<b>.700 System</b><br>RX 462.700 / TX 467.700 MHz<br>~15 mi range', 15);
+  mkRepeater(42.0502, -87.6856, '<b>Evanston .725 \u00b7 Cooperating</b><br>RX 462.725 / TX 467.725 MHz<br>~20 mi range', 20);
 
   // Meeting location (public address)
   L.circleMarker([42.1385, -87.7992], {
     radius: 7, color: '#e8eef4', weight: 2, fillColor: '#e8eef4', fillOpacity: 0.9
   }).addTo(map).bindPopup('<b>Bi-Monthly Meetings</b><br>Northbrook Fire Dept. Station #11<br>740 Dundee Road, Northbrook, IL');
+
+  map.fitBounds(L.featureGroup(circles).getBounds(), { padding: [16, 16] });
 </script>
 </body>
 </html>
