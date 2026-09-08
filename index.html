@@ -418,6 +418,9 @@
     attribution: 'Tiles &copy; Esri &mdash; Esri, HERE, Garmin, &copy; OpenStreetMap contributors',
     maxZoom: 16
   }).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 16, pane: 'shadowPane'
+  }).addTo(map);
 
   const amber = '#f5a623';
   const mkRepeater = (lat, lng, label, radiusM) => {
