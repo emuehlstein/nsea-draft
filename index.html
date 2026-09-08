@@ -5,9 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>North Shore Emergency Association — GMRS Public Service Radio | Chicago</title>
 <meta name="description" content="NSEA — Public service through GMRS two-way radio since 1966. Serving Northern Illinois and the greater metro Chicago area. Repeaters on 462.675, 462.650, and 462.700 MHz.">
+<link rel="icon" href="assets/logo.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700;800&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
 <style>
   :root {
     --navy: #0d1b2a;
@@ -49,6 +51,8 @@
     color: var(--text); display: flex; align-items: center; gap: 10px;
   }
   .nav-brand .dot { color: var(--amber); }
+  .nav-brand svg { height: 34px; width: 34px; display: block; }
+  .hero-logo { width: 148px; height: 148px; margin: 0 auto 26px; display: block; filter: drop-shadow(0 8px 30px rgba(245, 166, 35, 0.25)); }
   .nav-links { display: flex; gap: 26px; }
   .nav-links a {
     color: var(--muted); font-weight: 500; font-size: 0.95rem;
@@ -151,6 +155,32 @@
   }
   .card .tag.coop { background: transparent; color: var(--muted); border: 1px solid var(--border); }
 
+  /* Repeater spec cards */
+  .rptr-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+  .specs { margin-top: 16px; }
+  .specs .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 7px 0; border-bottom: 1px dashed var(--border); gap: 12px;
+  }
+  .specs .row:last-child { border-bottom: none; }
+  .specs .k {
+    color: var(--muted); font-size: 0.72rem; font-weight: 700;
+    letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap;
+  }
+  .specs .v { font-weight: 600; text-align: right; color: var(--text); }
+  .specs .v.soft { color: var(--muted); font-weight: 500; font-style: italic; }
+
+  /* Map */
+  #rptr-map {
+    height: 440px; margin-top: 40px; border-radius: 12px;
+    border: 1px solid var(--border); background: var(--navy-2);
+  }
+  .map-note { margin-top: 12px; color: var(--muted); font-size: 0.88rem; }
+  .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+    background: var(--navy-3); color: var(--text);
+  }
+  .leaflet-popup-content b { color: var(--amber); }
+
   /* Net priorities */
   .priority { border-left: 4px solid var(--amber); padding-left: 18px; margin-top: 22px; }
   .priority h4 {
@@ -193,7 +223,7 @@
 
 <nav>
   <div class="nav-inner">
-    <div class="nav-brand">NSEA<span class="dot">●</span></div>
+    <div class="nav-brand"><svg viewBox="0 0 240 240" aria-hidden="true"><circle cx="120" cy="120" r="102" fill="none" stroke="#f5a623" stroke-width="12"/><polyline points="6,95 38,95 52,95 62,52 75,126 88,38 102,142 116,48 130,132 144,62 158,116 172,84 186,95 234,95" fill="none" stroke="#f5a623" stroke-width="10" stroke-linejoin="round" stroke-linecap="round"/><text x="120" y="186" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="68" font-weight="700" letter-spacing="4" fill="#e8eef4">NSEA</text></svg>NSEA</div>
     <div class="nav-links">
       <a href="#repeaters">Repeaters</a>
       <a href="#net">Weekly Net</a>
@@ -206,6 +236,7 @@
 
 <header class="hero">
   <div class="container">
+    <svg class="hero-logo" viewBox="0 0 240 240" role="img" aria-label="NSEA emblem"><circle cx="120" cy="120" r="102" fill="rgba(13,27,42,0.5)" stroke="#f5a623" stroke-width="9"/><polyline points="6,95 38,95 52,95 62,52 75,126 88,38 102,142 116,48 130,132 144,62 158,116 172,84 186,95 234,95" fill="none" stroke="#f5a623" stroke-width="7" stroke-linejoin="round" stroke-linecap="round"/><text x="120" y="182" text-anchor="middle" font-family="Barlow Condensed, Arial Narrow, sans-serif" font-size="62" font-weight="700" letter-spacing="5" fill="#e8eef4">NSEA</text></svg>
     <div class="badge">Founded 1966 · Not-for-Profit Public Charity</div>
     <h1>North Shore<br>Emergency Association</h1>
     <p class="tagline">Public service through <strong>GMRS two-way radio</strong> — serving Northern Illinois and the greater metro Chicago area for nearly 60 years.</p>
@@ -230,33 +261,55 @@
   <div class="container">
     <div class="section-label">Coverage</div>
     <h2>GMRS Repeaters</h2>
-    <p class="lead">NSEA operates a network of GMRS repeaters covering the North Shore and greater Chicago metro area. Licensed GMRS operators may request permission to use the NSEA and cooperating repeaters.</p>
-    <div class="grid grid-3">
+    <p class="lead">NSEA operates a network of GMRS repeaters covering the North Shore and greater Chicago metro area. Licensed GMRS operators may request permission to use the NSEA and cooperating repeaters. All systems use the standard GMRS +5 MHz repeater offset.</p>
+    <div class="grid grid-2">
       <div class="card">
-        <h3>Primary</h3>
+        <div class="rptr-head"><h3>Heritage .675</h3><span class="tag">Primary · NSEA</span></div>
         <div class="freq">462.675</div>
-        <p>Main NSEA system. Transmit 467.675 MHz, PL 141.3. Home of the weekly net and emergency traffic.</p>
-        <span class="tag">NSEA</span>
+        <div class="specs">
+          <div class="row"><span class="k">RX (repeater output)</span><span class="v">462.675 MHz</span></div>
+          <div class="row"><span class="k">TX (your input)</span><span class="v">467.675 MHz</span></div>
+          <div class="row"><span class="k">Tone (PL)</span><span class="v">141.3 Hz</span></div>
+          <div class="row"><span class="k">Location</span><span class="v">North Shore · Chicago metro</span></div>
+        </div>
+        <p>Main NSEA system — home of the weekly net and emergency traffic.</p>
       </div>
       <div class="card">
-        <h3>Secondary</h3>
+        <div class="rptr-head"><h3>.650 System</h3><span class="tag">NSEA</span></div>
         <div class="freq">462.650</div>
-        <p>NSEA repeater serving the North Shore and surrounding communities.</p>
-        <span class="tag">NSEA</span>
+        <div class="specs">
+          <div class="row"><span class="k">RX (repeater output)</span><span class="v">462.650 MHz</span></div>
+          <div class="row"><span class="k">TX (your input)</span><span class="v">467.650 MHz</span></div>
+          <div class="row"><span class="k">Tone (PL)</span><span class="v soft">contact NSEA for access</span></div>
+          <div class="row"><span class="k">Location</span><span class="v">North Shore area</span></div>
+        </div>
+        <p>Serving the North Shore and surrounding communities.</p>
       </div>
       <div class="card">
-        <h3>Secondary</h3>
+        <div class="rptr-head"><h3>.700 System</h3><span class="tag">NSEA</span></div>
         <div class="freq">462.700</div>
-        <p>NSEA repeater extending coverage across the greater metro area.</p>
-        <span class="tag">NSEA</span>
+        <div class="specs">
+          <div class="row"><span class="k">RX (repeater output)</span><span class="v">462.700 MHz</span></div>
+          <div class="row"><span class="k">TX (your input)</span><span class="v">467.700 MHz</span></div>
+          <div class="row"><span class="k">Tone (PL)</span><span class="v soft">contact NSEA for access</span></div>
+          <div class="row"><span class="k">Location</span><span class="v">Greater Chicago metro</span></div>
+        </div>
+        <p>Extending coverage across the greater metro area.</p>
       </div>
       <div class="card">
-        <h3>Evanston</h3>
+        <div class="rptr-head"><h3>Evanston .725</h3><span class="tag coop">Cooperating</span></div>
         <div class="freq">462.725</div>
+        <div class="specs">
+          <div class="row"><span class="k">RX (repeater output)</span><span class="v">462.725 MHz</span></div>
+          <div class="row"><span class="k">TX (your input)</span><span class="v">467.725 MHz</span></div>
+          <div class="row"><span class="k">Tone (PL)</span><span class="v soft">contact system owner</span></div>
+          <div class="row"><span class="k">Location</span><span class="v">Evanston, IL</span></div>
+        </div>
         <p>Cooperating Evanston system, operated in coordination with NSEA.</p>
-        <span class="tag coop">Cooperating</span>
       </div>
     </div>
+    <div id="rptr-map"></div>
+    <p class="map-note">Repeater positions shown are approximate service areas — exact site locations are not published. Contact <a href="mailto:info@nsea.com">info@nsea.com</a> for access and coverage details.</p>
   </div>
 </section>
 
@@ -359,5 +412,34 @@
   </div>
 </footer>
 
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script>
+  const map = L.map('rptr-map', { scrollWheelZoom: false }).setView([42.10, -87.78], 10);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+    maxZoom: 18
+  }).addTo(map);
+
+  const amber = '#f5a623';
+  const mkRepeater = (lat, lng, label, radiusM) => {
+    L.circle([lat, lng], {
+      radius: radiusM, color: amber, weight: 1.5,
+      fillColor: amber, fillOpacity: 0.08
+    }).addTo(map);
+    L.circleMarker([lat, lng], {
+      radius: 7, color: amber, weight: 2, fillColor: amber, fillOpacity: 0.9
+    }).addTo(map).bindPopup(label);
+  };
+
+  // NSEA primary system (approximate service area)
+  mkRepeater(42.13, -87.82, '<b>NSEA System</b><br>462.675 / 462.650 / 462.700 MHz<br>TX +5 MHz \u00b7 .675 PL 141.3<br><em>Approximate service area</em>', 20000);
+  // Cooperating Evanston system (approximate)
+  mkRepeater(42.045, -87.688, '<b>Evanston .725 (Cooperating)</b><br>RX 462.725 / TX 467.725 MHz<br><em>Approximate service area</em>', 10000);
+
+  // Meeting location (public address)
+  L.circleMarker([42.1385, -87.7992], {
+    radius: 7, color: '#e8eef4', weight: 2, fillColor: '#e8eef4', fillOpacity: 0.9
+  }).addTo(map).bindPopup('<b>Bi-Monthly Meetings</b><br>Northbrook Fire Dept. Station #11<br>740 Dundee Road, Northbrook, IL');
+</script>
 </body>
 </html>
